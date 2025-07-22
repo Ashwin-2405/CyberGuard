@@ -1,0 +1,36 @@
+# Node and general dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+build/
+dist/
+
+# Environment variables
+.env
+
+# Miscellaneous system files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# IDE/editor config
+.vscode/
+.idea/
+
+# Production assets (if any)
+coverage/
+
+# React-specific
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# Backend-specific
+backend/node_modules/
+backend/.env
+backend/uploads/
