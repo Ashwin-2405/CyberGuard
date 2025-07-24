@@ -1,0 +1,16 @@
+[
+  {
+    "log": "Jul 23 09:14:56 server sshd[1528]: Failed password for invalid user root from 192.168.0.15 port 22",
+    "analysis": {
+      "severity": "error",
+      "reason": "Error analyzing log: [WinError 2] The system cannot find the file specified"
+    }
+  },
+  {
+    "log": "Jul 23 09:15:21 server sshd[1622]: Accepted password for user1 from 10.0.0.2 port 51422 ssh2",
+    "analysis": {
+      "severity": "error",
+      "reason": "Error analyzing log: [WinError 2] The system cannot find the file specified"
+    }
+  }
+]

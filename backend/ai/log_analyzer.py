@@ -3,6 +3,10 @@
 import subprocess
 import os
 import json
+import sys
+import io
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def analyze_log_line(log_line):
     """
@@ -47,7 +51,7 @@ def analyze_log_file(file_path, output_path):
         print(f"❌ File not found: {file_path}")
         return
 
-    print(f"📁 Reading log file: {file_path}\n")
+    print(f" Reading log file: {file_path}\n")
 
     with open(file_path, 'r') as f:
         lines = f.readlines()
@@ -72,7 +76,15 @@ def analyze_log_file(file_path, output_path):
 
     print(f"✅ Analysis complete. Results saved to ▶ {output_path}")
 
+import sys
+
 if __name__ == "__main__":
-    input_log_file = "sample.log"
-    output_json_file = "log_analysis_output.json"
+    # Accept log filename and output filename from command line
+    if len(sys.argv) >= 3:
+        input_log_file = sys.argv[1]
+        output_json_file = sys.argv[2]
+    else:
+        # Default to sample.log if no arguments are given
+        input_log_file = "sample.log"
+        output_json_file = "log_analysis_output.json"
     analyze_log_file(input_log_file, output_json_file)
