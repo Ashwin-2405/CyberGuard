@@ -1,0 +1,23 @@
+[
+  {
+    "log": "Jul 23 09:14:56 server sshd[1528]: Failed password for invalid user root from 192.168.0.15 port 22",
+    "analysis": {
+      "severity": "low",
+      "reason": "Failed login attempt with an invalid user and IP address, likely a misconfigured device or a scan from an external source."
+    }
+  },
+  {
+    "log": "Jul 23 09:15:21 server sshd[1622]: Accepted password for user1 from 10.0.0.2 port 51422 ssh2",
+    "analysis": {
+      "severity": "low",
+      "reason": "Accepting a password login from a known internal IP address and port is a normal and expected behavior. The risk level is low as it appears to be a legitimate user accessing the system."
+    }
+  },
+  {
+    "log": "Jul 23 09:16:01 server sudo: user1 : TTY=pts/0 ; PWD=/home/user1 ; USER=root ; COMMAND=/bin/ls",
+    "analysis": {
+      "severity": "medium",
+      "reason": "sudo command used by a user (user1) with elevated privileges as root, which could potentially be misused for malicious purposes"
+    }
+  }
+]

@@ -9,6 +9,7 @@ app.use(express.json());
 // Import routers
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/logs", require("./routes/logs"));
+app.use("/api/ai", require("./routes/ai"));
 
 // Health check route
 app.get("/", (req, res) => res.send("Backend running!"));
