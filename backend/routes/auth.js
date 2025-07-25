@@ -1,17 +1,16 @@
 // backend/routes/auth.js
 /**
- * CyberGuard Authentication Routes
- * Author: [Your Name/Team]
- * In-memory user storage (for demo); ready for DB integration.
+ * CyberGuard Authentication Routes – PRODUCTION + DEMO READY
+ * - Database-backed (PostgreSQL), strong credentials validation, clear errors
+ * - Optionally supports /me endpoint and auto-login after register
  */
 
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const router = express.Router();
 
-// ===== In-memory user store (replace with persistent DB for prod) =====
-const USERS = [];
+const client = require("../config/db"); // PostgreSQL client
+const router = express.Router();
 
 // ===== Utility Functions =====
 
@@ -22,75 +21,114 @@ function validateCredentials(username, password) {
   return userOk && passOk;
 }
 
-// ===== Register =====
+// ===== Registration Route =====
 router.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+
+  // Input validation (prod + demo)
+  if (!username || !password || !validateCredentials(username, password)) {
+    return res.status(400).json({ msg: "Invalid username or password (username: 3-32 alphanumeric, password: 6+ characters)" });
+  }
+
   try {
-    const { username, password } = req.body;
+    // Check if user exists (DB)
+    const userCheck = await client.query("SELECT id FROM users WHERE username = $1", [username]);
+    if (userCheck.rows.length > 0) {
+      return res.status(409).json({ msg: "User already exists, try another username." });
+    }
 
-    // Validate presence & strength
-    if (!username || !password || !validateCredentials(username, password))
-      return res.status(400).json({ msg: "Invalid username or password (min 3/6 chars, alphanumeric)." });
-
-    // Check duplicate
-    if (USERS.find(u => u.username === username))
-      return res.status(409).json({ msg: "User already exists, try a different username." });
-
-    // Secure password hash
+    // Hash the password
     const hash = await bcrypt.hash(password, 12);
-    USERS.push({ username, password: hash, created: new Date() });
 
-    // Optional: directly login after register
-    const token = jwt.sign(
-      { username },
-      process.env.JWT_SECRET || "SECRET",
-      { expiresIn: "2h" }
+    // Insert new user into DB
+    await client.query(
+      "INSERT INTO users (username, password) VALUES ($1, $2)",
+      [username, hash]
     );
+
+    // Direct-login after register (get new user ID)
+    const userGet = await client.query("SELECT id FROM users WHERE username = $1", [username]);
+    const user = userGet.rows[0];
+
+    // Prepare token payload
+    const payload = {
+      id: user.id,
+      username: username,
+    };
+
+    // JWT config
+    const jwtSecret = process.env.JWT_SECRET || "SECRET";
+    const jwtExpires = process.env.JWT_EXPIRES_IN || "2h";
+
+    // Sign JWT
+    const token = jwt.sign(payload, jwtSecret, { expiresIn: jwtExpires });
 
     res.json({ msg: "Registered successfully!", token });
   } catch (err) {
     console.error("Register error:", err);
-    res.status(500).json({ msg: "Registration failed. Try again." });
+    res.status(500).json({ msg: "Server error during registration." });
   }
 });
 
-// ===== Login =====
+// ===== Login Route =====
 router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  // Input validation (prod + demo)
+  if (!username || !password || !validateCredentials(username, password)) {
+    return res.status(400).json({ msg: "Invalid credentials (username: 3-32 alphanumeric, password: 6+ characters)" });
+  }
+
   try {
-    const { username, password } = req.body;
+    // Find user in DB
+    const userResult = await client.query("SELECT * FROM users WHERE username = $1", [username]);
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ msg: "Invalid credentials" });
+    }
 
-    // Validate presence & format
-    if (!username || !password || !validateCredentials(username, password))
-      return res.status(400).json({ msg: "Invalid credentials (min 3/6 chars, alphanumeric username)." });
-
-    const user = USERS.find(u => u.username === username);
-    if (!user) return res.status(401).json({ msg: "User not found." });
-
+    const user = userResult.rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(401).json({ msg: "Invalid credentials." });
+    if (!isMatch) {
+      return res.status(401).json({ msg: "Invalid credentials" });
+    }
 
-    const token = jwt.sign(
-      { username },
-      process.env.JWT_SECRET || "SECRET",
-      { expiresIn: "2h" }
-    );
+    const payload = {
+      id: user.id,
+      username: user.username,
+    };
+
+    const jwtSecret = process.env.JWT_SECRET || "SECRET";
+    const jwtExpires = process.env.JWT_EXPIRES_IN || "2h";
+
+    const token = jwt.sign(payload, jwtSecret, { expiresIn: jwtExpires });
+
     res.json({ token, msg: "Login successful!" });
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ msg: "Login failed. Try again." });
+    res.status(500).json({ msg: "Server error during login." });
   }
 });
 
-// ===== Optional: Auth test route =====
-router.get("/me", (req, res) => {
-  // Demo: use Bearer token to fetch username
+// ===== /me: Validate and Fetch Current User (Optional) =====
+router.get("/me", async (req, res) => {
   const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith("Bearer ")) return res.status(401).json({ msg: "No token." });
+  if (!auth || !auth.startsWith("Bearer ")) {
+    return res.status(401).json({ msg: "No token provided." });
+  }
   try {
-    const decoded = jwt.verify(auth.split(" ")[1], process.env.JWT_SECRET || "SECRET");
-    res.json({ user: decoded.username });
-  } catch {
-    res.status(401).json({ msg: "Token invalid or expired." });
+    const jwtSecret = process.env.JWT_SECRET || "SECRET";
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, jwtSecret);
+
+    // Optionally fetch user from DB for latest info
+    const userResult = await client.query("SELECT id, username FROM users WHERE id=$1", [decoded.id]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ msg: "User not found." });
+    }
+    const user = userResult.rows[0];
+    res.json({ user: { id: user.id, username: user.username } });
+  } catch (err) {
+    return res.status(401).json({ msg: "Token invalid or expired." });
   }
 });
 
