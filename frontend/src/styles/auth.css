@@ -1,0 +1,190 @@
+/* ----------- Luxury CyberGuard Auth Theme Styles ----------- */
+
+/* Glassmorphism background, more blur, calm blue overlay */
+.auth-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background: radial-gradient(ellipse at 58% 33%, #5456e799 32%, #23234f 95%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  /* glass blur */
+  backdrop-filter: blur(8.5px);
+  -webkit-backdrop-filter: blur(8.5px);
+}
+
+/* Auth card — modern glassmorphism, shadow, depth */
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  padding: 2.4em 1.55em 2em 1.55em;
+  background: rgba(24,25,40,0.92);
+  box-shadow:
+    0 12px 45px #6366f119,
+    0 2px 17px #2dd4bf16,
+    0 0.5px 11px #41379830;
+  border-radius: 23px;
+  color: #fff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  font-family: 'Inter','SF Pro Display',Arial,sans-serif;
+  transition: box-shadow 0.2s, background 0.24s;
+}
+
+.auth-title {
+  text-align: center;
+  margin-bottom: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #d1c6fd;
+  font-size: 1.38em;
+  text-shadow: 0 2px 13px #4f46e552;
+}
+
+/* Input fields: glass style, icons room, subtle shadow */
+.auth-input {
+  width: 100%;
+  padding: 0.84em 1em 0.84em 2.2em;
+  margin-bottom: 1.07em;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.07em;
+  background: rgba(29,31,56,0.97);
+  color: #f3f6fa;
+  outline: none;
+  box-shadow: 0 4px 16px #0ea5e92b, 0 1.5px 9px #4546d011;
+  transition: box-shadow 0.18s, border 0.15s, background 0.16s;
+  font-family: 'Inter','Roboto Mono',Arial,sans-serif;
+}
+.auth-input:focus {
+  background: #262758;
+  box-shadow: 0 0 0 2.3px #64b5f6c0;
+  outline: 2px solid #4f46e5c0;
+}
+.auth-input:disabled {
+  opacity: 0.62;
+  background: #32325a7a;
+}
+
+.input-group {
+  position: relative;
+}
+
+/* Input icons (user/lock/mail) */
+.login-icon {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  font-size: 1.11em;
+  color: #7a8aff;
+  opacity: 0.83;
+  pointer-events: none;
+}
+
+/* Button styling — cool gradient, soft glass, strong focus */
+.auth-btn {
+  width: 100%;
+  margin: 0.44em 0 0.85em 0;
+  padding: 0.85em 0 0.77em 0;
+  background: linear-gradient(90deg, #6366f1 66%, #0ea5e9 94%);
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 1.11em;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  box-shadow: 0 3.5px 15px #0ea5e944;
+  cursor: pointer;
+  transition: box-shadow 0.18s, background 0.13s, opacity 0.16s;
+  font-family: inherit;
+}
+.auth-btn:hover:enabled {
+  background: linear-gradient(88deg, #6d6cff 64%, #0ea5e9 98%);
+  box-shadow: 0 9px 30px #6366f132, 0 2px 12px #0ea5e930;
+  opacity: 0.92;
+}
+.auth-btn:focus {
+  outline: 2.2px solid #c7cfff;
+}
+.auth-btn:disabled {
+  opacity: 0.65;
+  filter: grayscale(0.4);
+}
+
+/* Info lines, register/switch notes */
+.new-user-note, .auth-alt {
+  text-align: center;
+  font-size: 1.01em;
+  margin: 13px 0 0 0;
+  color: #bde1ff;
+  font-weight: 510;
+  line-height: 1.44;
+}
+
+.register-span {
+  color: #37c3f7;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 3px;
+  font-weight: 650;
+  transition: color 0.12s;
+}
+.register-span:hover, .register-span:focus {
+  color: #4647ea;
+  text-shadow: 0 1px 9px #badefa29;
+}
+
+/* Error messaging — pro look */
+.error-msg {
+  background: #3c131e;
+  color: #fca5b4;
+  border-radius: 7px;
+  padding: 8px 13px;
+  margin: -5px 0 14px 0;
+  font-size: 0.99em;
+  text-align: center;
+  box-shadow: 0 2px 11px #f43f5e26;
+  letter-spacing: 0.015em;
+  font-weight: 530;
+  border: 1.4px solid #fb718577;
+  transition: background 0.14s;
+}
+
+/* Loader (spinner) — elegant and soft */
+.loader {
+  display: inline-block;
+  width: 21px;
+  height: 21px;
+  border: 3px solid #222a4d38;
+  border-top: 3px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 0.85s cubic-bezier(.5,.2,.7,.8) infinite;
+  vertical-align: middle;
+  margin-bottom: -2.5px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Placeholder color for all browsers */
+.auth-input::placeholder  { color: #bac3de; opacity: 1; }
+.auth-input::-webkit-input-placeholder { color: #b8bee8; opacity: 1;}
+.auth-input::-moz-placeholder   { color: #b8bee8; opacity: 1;}
+.auth-input:-ms-input-placeholder { color: #b8bee8; opacity: 1;}
+
+/* Responsive: beautiful on all devices */
+@media (max-width: 600px) {
+  .auth-bg {
+    padding: 17px 3px 28px 3px;
+    min-height: 98vh;
+    background: radial-gradient(ellipse at 60% 35%, #5456e799 36%, #23234f 101%);
+  }
+  .auth-card {
+    max-width: 99vw;
+    padding: 1.52em 0.6em 1.6em 0.6em;
+    border-radius: 13px;
+    font-size: 0.99em;
+  }
+  .auth-title { font-size: 1.06em; }
+}

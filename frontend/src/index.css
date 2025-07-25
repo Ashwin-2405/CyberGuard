@@ -111,3 +111,10 @@ pre, code {
   box-shadow: 0 12px 36px rgba(44,62,80,0.13);
   transform: translateY(-2px) scale(1.015);
 }
+
+body {
+  margin: 0;
+  background: #181829;
+  font-family: 'Inter', 'Roboto', sans-serif;
+  letter-spacing: 0.02em;
+}

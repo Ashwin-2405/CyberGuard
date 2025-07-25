@@ -2,14 +2,14 @@
 /**
  * CyberGuard Backend – Main Server
  * Clean, production-grade Express setup with security, logging, modular routing.
- * Author: [Your Team]
  */
 
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-require("dotenv").config();
+const dotenv = require("dotenv");
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,6 +34,14 @@ try {
   // Optionally terminate or serve partial API
 }
 
+// ======= File Analysis Route (Must be registered!) ============
+try {
+  const analyzeRouter = require('./routes/analyze');
+  app.use('/api', analyzeRouter); // This makes /api/analyze available
+} catch (err) {
+  console.error("❌ Failed to load analyze router:", err.message);
+}
+
 // ======= Protected Route Example =======
 const authMiddleware = require("./middleware/auth");
 app.get('/api/protected', authMiddleware, (req, res) => {
@@ -41,7 +49,7 @@ app.get('/api/protected', authMiddleware, (req, res) => {
 });
 
 // ======= Health & Welcome Routes =======
-app.get("/", (req, res) => 
+app.get("/", (req, res) =>
   res.type("text").send("🚦 CyberGuard Backend API is running! [Docs: /api/docs]")
 );
 
