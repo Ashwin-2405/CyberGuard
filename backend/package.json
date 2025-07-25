@@ -23,5 +23,8 @@
     "pg-hstore": "^2.3.4",
     "python-shell": "^5.0.0",
     "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.4"
   }
 }
