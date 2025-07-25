@@ -1,3 +1,113 @@
+/* === Tailwind Layers === */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* === Custom Global Styles & Polish === */
+
+html,
+body {
+  min-height: 100vh;
+  background: #f9fafd;
+  color: #232833;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  scroll-behavior: smooth;
+}
+
+/* --- Universal box-sizing --- */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* --- Focus outlines for accessibility --- */
+:focus {
+  outline: 2.2px solid #38bdf8 !important; 
+  outline-offset: 2px;
+}
+
+/* --- Selection color --- */
+::selection {
+  background: #c6e7ff;
+  color: #13203a;
+}
+
+/* === Scrollbar Customization (Webkit) === */
+::-webkit-scrollbar {
+  width: 10px;
+  background: #eef2fb;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9d9f0;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a9bcda;
+}
+
+/* === Include font smoothing for crisper text === */
+body, input, textarea, button {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Animations === */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px);}
+  to   { opacity: 1; transform: none;}
+}
+.fade-in-up {
+  animation: fadeInUp 0.55s cubic-bezier(.44, 0, .56, 1.12);
+}
+
+/* === Spinner (Loader) === */
+@keyframes spinner {
+  to { transform: rotate(360deg);}
+}
+.spinner {
+  display: inline-block;
+  width: 24px; height: 24px;
+  border: 3px solid #e0e7ef;
+  border-top: 3px solid #38bdf8;
+  border-radius: 50%;
+  animation: spinner 1s linear infinite;
+  margin: 0 auto;
+  vertical-align: middle;
+}
+
+/* === Visually hidden for accessibility (screen readers) === */
+.visually-hidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+}
+
+/* === Utility: Code highlighting (for JSON or logs, optional) === */
+pre, code {
+  background: #f6f8fa;
+  color: #2d3748;
+  padding: .14em .5em;
+  border-radius: 6px;
+  font-size: 1em;
+  font-family: 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+}
+
+/* === Responsive Utilities === */
+@media (max-width: 700px) {
+  html, body {
+    font-size: 15px;
+  }
+}
+
+/* === Custom Card (matches App.css if used) === */
+.card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(44,62,80,0.09);
+  padding: 2.2rem;
+  max-width: 410px;
+  margin: 2.5rem auto;
+  transition: box-shadow .18s cubic-bezier(.4,0,.2,1), transform .18s cubic-bezier(.4,0,.2,1);
+}
+.card:hover {
+  box-shadow: 0 12px 36px rgba(44,62,80,0.13);
+  transform: translateY(-2px) scale(1.015);
+}

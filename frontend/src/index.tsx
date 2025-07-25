@@ -1,19 +1,25 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import './index.css';      // Import enhanced global & Tailwind CSS styles
 import App from './App';
+// Remove reportWebVitals if you aren't using it, or leave as an opt-in for analytics
 import reportWebVitals from './reportWebVitals';
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+// Strictly typed root element for robust codebases
+const rootElement = document.getElementById('root') as HTMLElement | null;
+
+if (!rootElement) {
+  throw new Error("Root element with id 'root' not found!"); // Immediate, clear error if root div missing
+}
+
+const root = ReactDOM.createRoot(rootElement);
+
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+// Opt-in to web vitals reporting if desired for production analytics
+// For most hackathon/portfolio/POC projects, this can be left as-is or even removed
 reportWebVitals();
