@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/auth.css';
 
-// Brand/Logo SVG (calm, cyber vibe)
+// Brand/Logo SVG (cyber calm love)
 const RegisterLogo = () => (
   <svg width="36" height="36" viewBox="0 0 38 38" fill="none" aria-hidden="true" style={{marginBottom:-4}}>
     <circle cx="19" cy="19" r="19" fill="#353C68" />
@@ -43,7 +43,7 @@ const Register: React.FC<RegisterProps> = ({
       } else {
         setError(data.msg || data.error || 'Registration failed');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again!');
     } finally {
       setLoading(false);
@@ -52,46 +52,50 @@ const Register: React.FC<RegisterProps> = ({
 
   return (
     <div style={{
-      minHeight:"100vh", width:"100vw",
+      height:"100vh", width:"100vw",
       display:"flex", alignItems:"center", justifyContent:"center",
-      background: "none"
+      background: "none", overflow: "hidden"
     }}>
       <form
         className="auth-card"
         style={{
-          minWidth: 312, maxWidth: 355,
+          width: "332px",
+          maxWidth: "95vw",
           background: 'rgba(31,30,48,0.97)',
           boxShadow: '0 8px 28px #99b9fb29,0 2.5px 15px #3bbfae33',
-          borderRadius: 22,
-          padding:"2.3em 1.6em 2.3em 1.6em",
-          fontFamily: "'Inter','SF Pro Display',Arial,sans-serif"
+          borderRadius: 20,
+          padding:"2em 1.4em 2em 1.4em",
+          fontFamily: "'Inter','SF Pro Display',Arial,sans-serif",
+          display: "flex", flexDirection: "column", alignItems: "center",
+          justifyContent: "center",
+          minHeight: "0",
         }}
         onSubmit={handleRegister}
         aria-label="registration form"
         autoComplete="on"
       >
         <div style={{
-          display:"flex", flexDirection:"column", alignItems:"center", marginBottom:12
+          display:"flex", flexDirection:"column", alignItems:"center", marginBottom:10
         }}>
           <RegisterLogo />
           <span style={{
             fontWeight: 800,
             color: "#b6ccfa",
             letterSpacing: ".025em",
-            fontSize: "1.14em",
+            fontSize: "1.11em",
             marginTop:2,
           }}>CyberGuard</span>
         </div>
         <h2 className="auth-title" style={{
-          textAlign: "center", fontWeight: 650, color: "#c0bfff", fontSize: "1.2em", marginBottom: 14, marginTop:2
+          textAlign: "center", fontWeight: 650, color: "#c0bfff",
+          fontSize: "1.12em", marginBottom: 13, marginTop:2
         }}>
           Create your account
         </h2>
-
         {/* Username */}
         <div className="input-group" style={{position:"relative"}}>
           <span style={{
-            position:"absolute", left:13, top:13, fontSize:19, color:"#7176ba"
+            position:"absolute", left:13, top:11, fontSize:17, color:"#7176ba"
           }}>👤</span>
           <input
             className="auth-input"
@@ -106,14 +110,13 @@ const Register: React.FC<RegisterProps> = ({
             onChange={e => setUsername(e.target.value)}
             autoComplete="username"
             aria-label="username"
-            style={{paddingLeft:39, marginBottom:16}}
+            style={{paddingLeft:38, marginBottom:14, width:"95%"}}
           />
         </div>
-
         {/* Email */}
         <div className="input-group" style={{position:"relative"}}>
           <span style={{
-            position:"absolute", left:13, top:13, fontSize:19, color:"#6ad0e8"
+            position:"absolute", left:13, top:11, fontSize:17, color:"#4ca7cc"
           }}>✉️</span>
           <input
             className="auth-input"
@@ -125,14 +128,13 @@ const Register: React.FC<RegisterProps> = ({
             required
             autoComplete="email"
             aria-label="email"
-            style={{paddingLeft:39, marginBottom:16}}
+            style={{paddingLeft:38, marginBottom:14, width:"95%"}}
           />
         </div>
-
         {/* Password */}
         <div className="input-group" style={{position:"relative"}}>
           <span style={{
-            position:"absolute", left:13, top:13, fontSize:19, color:"#7176ba"
+            position:"absolute", left:13, top:11, fontSize:17, color:"#7176ba"
           }}>🔒</span>
           <input
             className="auth-input"
@@ -146,7 +148,7 @@ const Register: React.FC<RegisterProps> = ({
             required
             autoComplete="new-password"
             aria-label="password"
-            style={{paddingLeft:39, marginBottom:7}}
+            style={{paddingLeft:38, marginBottom:6, width:"95%"}}
           />
           <button
             tabIndex={0}
@@ -156,31 +158,38 @@ const Register: React.FC<RegisterProps> = ({
             onClick={() => setShowPW(s => !s)}
             style={{
               position: "absolute",
-              right: 7, top: 9,
+              right: 5, top: 8,
               background: "none", border: "none", fontSize:17,
-              color: "#7fd6fa", cursor: "pointer", opacity:0.94
+              color: "#7fd6fa", cursor: "pointer", opacity:0.90
             }}
           >
             {showPW ? "🙈" : "👁️"}
           </button>
         </div>
-
         <button
           className="auth-btn"
           type="submit"
           disabled={loading}
           style={{
-            margin: "0.5em 0 0.7em 0", boxShadow:"0 2px 16px #0ea5e933"
+            margin: "0.4em 0 0.5em 0", boxShadow:"0 2px 16px #0ea5e928",
+            width:"100%",
+            padding: "11px 0",
+            borderRadius: 7,
+            fontWeight: 700,
+            fontSize: "1.01em",
           }}
         >
           {loading ? <span className="loader" /> : 'Register'}
         </button>
-        {error && <div className="error-msg" role="alert">{error}</div>}
-
+        {error && <div className="error-msg" role="alert" style={{
+          background:"#541422", color:"#fba7c1", borderRadius:8, marginTop:6,
+          padding:"7px 10px", fontSize:"0.96em", fontWeight:560,
+          width:"100%", textAlign:"center", boxShadow:"0 1.5px 7px #88025422"
+        }}>{error}</div>}
         <div className="new-user-note" style={{
           textAlign: "center",
-          fontSize: "1em",
-          margin: "16px 0 0 0",
+          fontSize: "0.94em",
+          margin: "13px 0 0 0",
           color: "#d1c6fd"
         }}>
           <span style={{color:"#b2e0ff"}}>Already have an account?</span>
@@ -196,7 +205,7 @@ const Register: React.FC<RegisterProps> = ({
               textDecoration: "underline",
               cursor: "pointer",
               marginLeft: 6,
-              fontSize: "1.04em"
+              fontSize: "1.045em"
             }}
             onKeyDown={e => (e.key === 'Enter' ? switchToLogin() : undefined)}>
             Login
@@ -215,6 +224,13 @@ const Register: React.FC<RegisterProps> = ({
           .auth-input::placeholder { color: #b1b7e6; opacity:1;}
         `}</style>
       </form>
+      <style>{`
+        html, body, #root {
+          height: 100vh !important;
+          min-height: 100dvh !important;
+          overflow: hidden !important;
+        }
+      `}</style>
     </div>
   );
 };

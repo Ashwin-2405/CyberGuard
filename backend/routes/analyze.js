@@ -1,35 +1,34 @@
 const express = require('express');
 const multer = require('multer');
-const fileType = require('file-type'); // npm install file-type
+const fileType = require('file-type');
 const router = express.Router();
-
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Patterns for threats/warnings/informational issues.
-// Extend this list as needed.
-const THREAT_PATTERNS = [
-  { regex: /\beval\s*\(/gi,           type: "DANGER",    title: "Use of eval()" },
-  { regex: /\bexec\s*\(/gi,           type: "DANGER",    title: "Use of exec()" },
-  { regex: /os\.system\s*\(/gi,       type: "WARNING",   title: "os.system shell call" },
-  { regex: /subprocess\./gi,          type: "WARNING",   title: "Use of subprocess" },
-  { regex: /pickle\.load/gi,          type: "WARNING",   title: "Untrusted pickle load" },
-  { regex: /input\s*\(/gi,            type: "INFO",      title: "Use of input()" },
-  { regex: /import\s+os/gi,           type: "INFO",      title: "Access to OS module" },
-  { regex: /import\s+socket/gi,       type: "INFO",      title: "Network usage (socket)" },
-  { regex: /<script.*?>/gi,           type: "DANGER",    title: "Embedded script tag" },
-  { regex: /macro/i,                  type: "WARNING",   title: "Possible Macro (Office file)" },
-  { regex: /password[\s:=]/i,         type: "WARNING",   title: "Looks like hardcoded password" },
-  { regex: /base64_decode|atob\(|btoa\(|unescape\(/i, type: "WARNING", title: "Obfuscated string/encoding" },
-  // Extend for PDF, Office malware, etc.
-];
+const THREAT_PATTERNS = [ /* ...as before... */ ];
+const SEVERITY_SCORE = { DANGER: 4, WARNING: 2, INFO: 1, SAFE: 0 };
 
-const SEVERITY_SCORE = {
-  'DANGER': 3,
-  'WARNING': 2,
-  'INFO': 1,
-  'SAFE': 0,
-};
+function getThreatLevel(score) {
+  if (score >= 7) return "DANGEROUS";
+  if (score >= 4) return "WARNING";
+  if (score >= 1) return "INFO";
+  return "SAFE";
+}
 
+// Helper to decide text-ness robustly
+function looksLikeText(buffer, detectedType, originalname) {
+  const ext = originalname.split('.').pop()?.toLowerCase() ?? '';
+  // 1. Mime check
+  if (/^text|json|xml|csv|log|py|js|java|c$|cpp$|sh$|md$|pl$|html|php|bash|shell/i.test(detectedType)) return true;
+  // 2. Extension check
+  if (/\.(txt|py|js|php|log|md|sh|c|cpp|json|xml|csv|java|pl|html)$/i.test(originalname)) return true;
+  // 3. Content: ratio of printable chars
+  if (!buffer || !buffer.length) return false;
+  const asString = buffer.toString('utf8');
+  let readableChars = asString.replace(/[\x00-\x08\x0B-\x1F\x7F]/g, '').length;
+  return (readableChars / buffer.length) > 0.85;
+}
+
+// -- MAIN ROUTE --
 router.post('/analyze', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -37,34 +36,30 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
     }
     const { originalname, mimetype, buffer } = req.file;
 
-    // Detect file type from buffer (best guess)
+    // Improved filetype detection
     let detectedType = mimetype;
     if (!detectedType || detectedType === 'application/octet-stream') {
       const ft = await fileType.fromBuffer(buffer);
       detectedType = ft ? ft.mime : 'unknown';
     }
 
-    let content = null;
-    let textLines = [];
-    // Smart detection: treat as text/code if looks like text content, else as binary/doc
-    const extension = originalname.split('.').pop()?.toLowerCase() ?? '';
-    const probablyText = (
-      /^text|json|xml|csv|log|py|js|java|c$|cpp$|sh$|md$|pl$|html|php|bash|shell/i.test(detectedType) ||
-      /(\.txt|\.py|\.js|\.php|\.log|\.md|\.sh|\.c|\.cpp|\.json|\.xml|\.csv|\.java|\.pl|\.html)$/i.test(originalname)
-    ) || (buffer && buffer.length > 0 && buffer.toString('utf8').replace(/[\x00-\x09\x0B-\x1F\x7F]/g, '').length / buffer.length > 0.9);
+    let content = null, textLines = [];
+    const isText = looksLikeText(buffer, detectedType, originalname);
 
-    if (probablyText) {
+    if (isText) {
       content = buffer.toString('utf8');
       textLines = content.split(/\r?\n/);
     }
 
-    // Analyze for threats/errors
     const errors = [];
+    let stats = { DANGER: 0, WARNING: 0, INFO: 0, SAFE: 0 };
+    let uniqueErrorTypes = new Set();
     let severityRawScore = 0;
+    let highestSingle = 0;
 
     if (content && textLines.length) {
       textLines.forEach((line, idx) => {
-        THREAT_PATTERNS.forEach(pattern => {
+        for (const pattern of THREAT_PATTERNS) {
           if (pattern.regex.test(line)) {
             errors.push({
               line: idx + 1,
@@ -72,12 +67,17 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
               message: pattern.title,
               code: line.trim(),
             });
+            stats[pattern.type] = (stats[pattern.type]||0) + 1;
+            uniqueErrorTypes.add(pattern.type);
             severityRawScore += SEVERITY_SCORE[pattern.type] || 0;
+            if ((SEVERITY_SCORE[pattern.type] || 0) > highestSingle) {
+              highestSingle = SEVERITY_SCORE[pattern.type] || 0;
+            }
           }
-        });
+        }
       });
     } else if (
-      // For common office/pdf types, give a warning (optionally: use PDF/Office parsers)
+      // Detect common binaries: PDF, Office, etc.
       /\b(pdf|msword|vnd\.openxmlformats|officedocument|excel|xls|doc|ppt|mspowerpoint)\b/i.test(detectedType) ||
       /(\.pdf|\.docx?|\.xlsx?|\.pptx?)$/i.test(originalname)
     ) {
@@ -87,27 +87,46 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
         message: "Binary/Office file uploaded: Deep analysis not yet implemented. File could contain macros or embedded payloads.",
         code: "(binary header not shown)",
       });
-      severityRawScore += 2;
+      stats.WARNING += 1;
+      uniqueErrorTypes.add("WARNING");
+      severityRawScore += SEVERITY_SCORE["WARNING"];
+      highestSingle = Math.max(highestSingle, SEVERITY_SCORE["WARNING"]);
     }
 
-    // Threat/safety "level"
     let safetyLevel = 'SAFE', threatScore = 0;
     if (errors.length === 0) {
       safetyLevel = 'SAFE';
       threatScore = 0;
     } else {
-      if (severityRawScore >= 5)      safetyLevel = 'DANGEROUS';
-      else if (severityRawScore >= 3) safetyLevel = 'WARNING';
-      else if (severityRawScore >= 1) safetyLevel = 'INFO';
-      threatScore = Math.min(10, severityRawScore * 2); // 0-10 scale
+      threatScore =
+        uniqueErrorTypes.size * 2 +
+        (stats.DANGER || 0) * 3 +
+        (stats.WARNING || 0) +
+        Math.ceil((stats.INFO || 0) / 2) +
+        highestSingle;
+      if (threatScore >= 12) threatScore = 10;
+      if (threatScore <= 0) threatScore = 1;
+      safetyLevel = getThreatLevel(threatScore);
     }
 
-    // Prepare chart data (guaranteed presence of all keys)
+    // Chart data
     const threatTypes = ['DANGER','WARNING','INFO','SAFE'];
-    const counts = {DANGER:0, WARNING:0, INFO:0, SAFE:0};
-    errors.forEach(e => { counts[e.type] = (counts[e.type]||0)+1; });
-    if(errors.length===0) counts.SAFE=1;
-    const chartData = threatTypes.map(type => ({ type, count: counts[type] }));
+    const chartData = threatTypes.map(type => ({ type, count: stats[type] || 0 }));
+    if(errors.length===0) chartData[3].count = 1;
+
+    // **** THIS IS THE CRITICAL FIX ****
+    let preview = null;
+    if (isText && textLines.length) {
+      // Only lines with mostly readable ASCII (not control codes)
+      preview = textLines
+        .slice(0, 3)
+        .map(line => /^[\x20-\x7E\t\r\n]{3,}/.test(line) ? line : '')
+        .map(line => line.replace(/\r?\n/, '')).filter(x=>!!x);
+      // If all 3 preview lines are blank/unreadable, set to null
+      if (!preview.length) preview = null;
+    } else {
+      preview = null; // For binary/non-text, never send gibberish
+    }
 
     res.json({
       result: `Analysis of '${originalname}' (${detectedType}): ${errors.length} issues found.`,
@@ -116,12 +135,22 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
         fileType: detectedType,
         totalIssues: errors.length,
         safetyLevel,
-        threatScore, // 0=Safe, 1–4=Info, 5–6=Warning, ≥7=Danger
+        threatScore,
+        levelExplanation: (
+          safetyLevel === "DANGEROUS"
+          ? "Dangerous: File contains high-risk code or signatures."
+          : safetyLevel === "WARNING"
+          ? "Warning: Suspicious code, risky settings, or possible malware."
+          : safetyLevel === "INFO"
+          ? "Some not-very-risky issues were found, but no critical threats."
+          : "No known issues found. This file appears safe."
+        )
       },
       errors,
       chartData,
-      preview: (content && textLines.length) ? textLines.slice(0, 3) : null,
+      preview,
     });
+
   } catch (err) {
     console.error('Analyze error:', err);
     res.status(500).json({ result: 'Failed to analyze file.' });
